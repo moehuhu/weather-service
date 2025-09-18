@@ -1,6 +1,6 @@
 export default {
   async fetch(request, env) {
-    if (!request.url.startsWith('/api/')) { return new Response('{}') }
+    if (!request.url.includes('/api/')) { return new Response('{}') }
     const position = request.url.split('/').pop()
     const stmt = env.DB.prepare("SELECT * FROM position_weather WHERE position = ?");
     const { results } = await stmt.bind(position).all();
