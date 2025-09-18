@@ -18,7 +18,7 @@ export default {
     const weatherResponse = await fetch(weatherURL)
     const weatherData = await weatherResponse.text()
     await env.DB.prepare("INSERT INTO position_weather (position, weather, date) VALUES (?, ?, ?)")
-      .bind(position, JSON.stringify(weatherData), new Date().toISOString())
+      .bind(position, weatherData, new Date().toISOString())
       .run()
     return new Response(JSON.parse(weatherData));
   },
