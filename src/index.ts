@@ -7,7 +7,8 @@ export default {
     const { results } = await stmt.all();
     const weatherURL = `https://api.caiyunapp.com/v2.6/${env?.WEATHER_TOKEN}`
     const weatherResponse = await fetch(weatherURL)
-    const weatherData = await weatherResponse.json()
+    console.log(weatherResponse)
+    const weatherData = await weatherResponse.text()
     console.log(weatherData)
     return new Response(JSON.stringify({ position, weatherData }));
   },
