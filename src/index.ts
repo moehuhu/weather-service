@@ -20,6 +20,6 @@ export default {
     env.DB.prepare("INSERT INTO position_weather (position, weather, date) VALUES (?, ?, ?)")
       .bind(position, JSON.stringify(weatherData), new Date().toISOString())
       .run()
-    return new Response(weatherData);
+    return new Response('未缓存天气');
   },
 } satisfies ExportedHandler<Env>;
