@@ -1,0 +1,16 @@
+{
+  "compatibility_date": "2025-04-01",
+  "main": "src/index.ts",
+  "name": "weather-service",
+  "upload_source_maps": true,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_id": "c9a525d7-6832-4498-833a-c805e8432814",
+      "database_name": "weather"
+    }
+  ],
+  "observability": {
+    "enabled": true
+  }
+}
