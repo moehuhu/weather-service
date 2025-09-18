@@ -10,6 +10,6 @@ export default {
     console.log(weatherResponse)
     const weatherData = await weatherResponse.text()
     console.log(weatherData)
-    return new Response(JSON.stringify({ position, weatherData }));
+    return new Response(JSON.stringify({ weatherURL, weatherData }));
   },
 } satisfies ExportedHandler<Env>;
