@@ -12,7 +12,7 @@ export default {
           .bind(JSON.stringify(weatherData), new Date().toISOString(), position)
           .run()
       }
-      return new Response(JSON.stringify(weatherData));
+      return new Response(weatherData);
     }
     const weatherURL = `https://api.caiyunapp.com/v2.6/${env?.WEATHER_TOKEN}/${position}/daily?dailysteps=7`
     const weatherResponse = await fetch(weatherURL)
@@ -20,6 +20,6 @@ export default {
     env.DB.prepare("INSERT INTO position_weather (position, weather, date) VALUES (?, ?, ?)")
       .bind(position, JSON.stringify(weatherData), new Date().toISOString())
       .run()
-    return new Response(JSON.stringify(results[0]));
+    return new Response(weatherData);
   },
 } satisfies ExportedHandler<Env>;
