@@ -1,4 +1,3 @@
-import dayjs from 'dayjs'
 export default {
   async fetch(request, env) {
     console.log(env)
@@ -6,10 +5,9 @@ export default {
     const stmt = env.DB.prepare("SELECT * FROM position_weather WHERE position = ?");
     const { results } = await stmt.bind(position).all();
     if (results.length !== 0) {
-      const nowDate = dayjs()
       const weatherData = results[0].weather
-      const oldDate = dayjs(results[0].date)
-      if (nowDate.diff(oldDate, 'hour') > 2) {
+      const oldDate = new Date(results[0].date)
+      if (Date.now() - oldDate.getTime() > 2 * 60 * 60 * 1000) {
         env.DB.prepare("UPDATE position_weather SET weather = ?, date = ? WHERE position = ?")
           .bind(JSON.stringify(weatherData), new Date().toISOString(), position)
           .run()
@@ -20,7 +18,7 @@ export default {
     const weatherResponse = await fetch(weatherURL)
     const weatherData = await weatherResponse.text()
     env.DB.prepare("INSERT INTO position_weather (position, weather, date) VALUES (?, ?, ?)")
-      .bind(position, JSON.stringify(weatherData), dayjs().toISOString)
+      .bind(position, JSON.stringify(weatherData), new Date().toISOString())
       .run()
     return new Response(JSON.stringify(results[0]));
   },
