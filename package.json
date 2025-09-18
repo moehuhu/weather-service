@@ -30,8 +30,5 @@
     "dev": "pnpm seedLocalD1 && wrangler dev",
     "predeploy": "wrangler d1 migrations apply DB --remote",
     "seedLocalD1": "wrangler d1 migrations apply DB --local"
-  },
-  "dependencies": {
-    "dayjs": "^1.11.18"
   }
 }
