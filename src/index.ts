@@ -7,6 +7,6 @@ export default {
     const stmt = env.DB.prepare("SELECT * FROM position_weather");
     const { results } = await stmt.all();
 
-    return new Response(JSON.stringify(results));
+    return new Response(JSON.stringify({ position, env }));
   },
 } satisfies ExportedHandler<Env>;
