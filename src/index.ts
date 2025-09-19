@@ -1,26 +1,34 @@
+import { SignJWT, importPKCS8 } from "jose";
 export default {
+  async scheduled() { },
   async fetch(request, env) {
-    if (!request.url.includes('/api/')) { return new Response('{}') }
-    const position = request.url.split('/').pop()
-    const stmt = env.DB.prepare("SELECT * FROM position_weather WHERE position = ?");
-    const { results } = await stmt.bind(position).all();
-    const weatherURL = `https://api.caiyunapp.com/v2.6/${env?.WEATHER_TOKEN}/${position}/daily?dailysteps=7`
-
-    if (results.length !== 0) {
-      const oldWeather = results[0].weather
-      const oldDate = new Date(results[0].date)
-      if (Date.now() - oldDate.getTime() > 2 * 60 * 60 * 1000) {
-        const weatherResponse = await fetch(weatherURL)
-        const weatherData = await weatherResponse.text()
-        await env.DB.prepare("UPDATE position_weather SET weather = ?, date = ? WHERE position = ?")
-          .bind(weatherData, new Date().toISOString(), position)
-          .run()
-        return new Response(weatherData);
+    const fetchWeather = async (position: string) => {
+      const privateKey = await importPKCS8(env.PRIVATE_KEY, 'EdDSA')
+      const customHeader = {
+        alg: 'EdDSA',
+        kid: env.KEY_ID
       }
-      return new Response(oldWeather);
+      const iat = Math.floor(Date.now() / 1000) - 30;
+      const exp = iat + 900;
+      const customPayload = {
+        sub: env.PROJECT_ID,
+        iat: iat,
+        exp: exp
+      }
+      const authentication = await new SignJWT(customPayload)
+        .setProtectedHeader(customHeader)
+        .sign(privateKey)
+      const weatherURL = `https://p53dmxww9d.re.qweatherapi.com/v7/weather/7d?location=${position}`
+      const weatherResponse = await fetch(weatherURL, {
+        headers: {
+          'Authorization': `Bearer ${authentication}`
+        }
+      })
+      const weatherData = await weatherResponse.text()
+      return weatherData
     }
-    const weatherResponse = await fetch(weatherURL)
-    const weatherData = await weatherResponse.text()
+    const position = request.url.split('/').pop()
+    const weatherData = await fetchWeather(position)
     await env.DB.prepare("INSERT INTO position_weather (position, weather, date) VALUES (?, ?, ?)")
       .bind(position, weatherData, new Date().toISOString())
       .run()
