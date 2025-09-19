@@ -1,4 +1,5 @@
 import { SignJWT, importPKCS8 } from "jose";
+import { to } from "await-to-js";
 export default {
   async scheduled() { },
   async fetch(request, env) {
@@ -25,7 +26,7 @@ export default {
         }
       })
       const weatherData = await weatherResponse.text()
-      return weatherData
+      return JSON.parse(weatherData)
     }
     const requestParams = request.url.split('?')?.[1]
     const params: Record<string, string> = {}
@@ -41,20 +42,26 @@ export default {
       const oldWeather = results[0].weather
       const oldDate = results[0].updated_at as number
       if (Date.now() - oldDate > 2 * 60 * 60 * 1000 || !results[0].success) {
-        const weatherData = await fetchWeather(position)
+        const [error, weatherData] = await to(fetchWeather(position))
+        if (error) {
+          return new Response(error.message, { status: 500 })
+        }
         const success = weatherData.code == 200 ? 1 : 0
         await env.DB.prepare("UPDATE position_weather SET weather = ?, updated_at = ?, success = ? WHERE longitude = ? AND latitude = ?")
-          .bind(weatherData, Date.now(), success, longitude, latitude)
+          .bind(JSON.stringify(weatherData), Date.now(), success, longitude, latitude)
           .run()
-        return new Response(weatherData);
+        return new Response(JSON.stringify(weatherData));
       }
       return new Response(oldWeather);
     }
-    const weatherData = await fetchWeather(position)
+    const [error, weatherData] = await to(fetchWeather(position))
+    if (error) {
+      return new Response(error.message, { status: 500 })
+    }
     const success = weatherData.code == 200 ? 1 : 0
     await env.DB.prepare("INSERT INTO position_weather (longitude, latitude, weather, updated_at, success) VALUES (?, ?, ?, ?, ?)")
-      .bind(longitude, latitude, weatherData, Date.now(), success)
+      .bind(longitude, latitude, JSON.stringify(weatherData), Date.now(), success)
       .run()
-    return new Response(weatherData);
+    return new Response(JSON.stringify(weatherData));
   },
 } satisfies ExportedHandler<Env>;
