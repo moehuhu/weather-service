@@ -34,6 +34,7 @@ export default {
     if (!longitude || !latitude) {
       return new Response('Invalid request', { status: 400 })
     }
+    const position = `${longitude},${latitude}`
     const stmt = env.DB.prepare("SELECT * FROM position_weather WHERE longitude = ? AND latitude = ?")
     const { results } = await stmt.bind(longitude, latitude).all()
     if (results.length > 0) {
@@ -49,7 +50,6 @@ export default {
       }
       return new Response(oldWeather);
     }
-    const position = `${longitude},${latitude}`
     const weatherData = await fetchWeather(position)
     const success = weatherData.code == 200
     await env.DB.prepare("INSERT INTO position_weather (longitude, latitude, weather, updated_at, success) VALUES (?, ?, ?, ?, ?)")
