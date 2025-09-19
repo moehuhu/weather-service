@@ -1,7 +1,10 @@
 import { SignJWT, importPKCS8 } from "jose";
 import { to } from "await-to-js";
 export default {
-  async scheduled() { },
+  async scheduled(controller, env, ctx) {
+    const stmt = env.DB.prepare("DELETE FROM position_weather WHERE updated_at < ?")
+    await stmt.bind(Date.now() - 24 * 60 * 60 * 1000).run()
+  },
   async fetch(request, env) {
     const fetchWeather = async (position: string) => {
       const privateKey = await importPKCS8(env.PRIVATE_KEY, 'EdDSA')

@@ -10,6 +10,11 @@
       "database_name": "weather"
     }
   ],
+  "triggers": {
+    "crons": [
+      "* 12 * * *"
+    ]
+  },
   "observability": {
     "enabled": true
   }
