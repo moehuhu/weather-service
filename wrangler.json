@@ -12,7 +12,7 @@
   ],
   "triggers": {
     "crons": [
-      "* 12 * * *"
+      "0 12 * * *"
     ]
   },
   "observability": {
