@@ -1,10 +1,7 @@
 import { SignJWT, importPKCS8 } from "jose";
 import { to } from "await-to-js";
 export default {
-  async scheduled(controller, env, ctx) {
-    const stmt = env.DB.prepare("DELETE FROM position_weather WHERE updated_at < ?")
-    await stmt.bind(Date.now() - 24 * 60 * 60 * 1000).run()
-  },
+  async scheduled(controller, env, ctx) { },
   async fetch(request, env) {
     const fetchWeather = async (position: string) => {
       const privateKey = await importPKCS8(env.PRIVATE_KEY, 'EdDSA')
@@ -29,42 +26,21 @@ export default {
         }
       })
       const weatherData = await weatherResponse.text()
-      return JSON.parse(weatherData)
+      return weatherData
     }
+
     const requestParams = request.url.split('?')?.[1]
     const params: Record<string, string> = {}
     requestParams?.split('&').map(item => item.split('=')).forEach(item => params[item[0]] = item[1])
     const { longitude, latitude } = params
-    if (!longitude || !latitude) {
+    if (longitude === undefined || latitude === undefined) {
       return new Response(JSON.stringify({ error: { message: 'Invalid request' } }), { status: 400, headers: { 'Content-Type': 'application/json' } })
     }
     const position = `${longitude},${latitude}`
-    const stmt = env.DB.prepare("SELECT * FROM position_weather WHERE longitude = ? AND latitude = ?")
-    const { results } = await stmt.bind(longitude, latitude).all()
-    if (results.length > 0) {
-      const oldWeather = results[0].weather
-      const oldDate = results[0].updated_at as number
-      if (Date.now() - oldDate > 2 * 60 * 60 * 1000 || !results[0].success) {
-        const [error, weatherData] = await to(fetchWeather(position))
-        if (error) {
-          return new Response(JSON.stringify({ error: { message: error.message } }), { status: 500, headers: { 'Content-Type': 'application/json' } })
-        }
-        const success = weatherData.code == 200 ? 1 : 0
-        await env.DB.prepare("UPDATE position_weather SET weather = ?, updated_at = ?, success = ? WHERE longitude = ? AND latitude = ?")
-          .bind(JSON.stringify(weatherData), Date.now(), success, longitude, latitude)
-          .run()
-        return new Response(JSON.stringify(weatherData), { headers: { 'Content-Type': 'application/json' } });
-      }
-      return new Response(oldWeather as string, { headers: { 'Content-Type': 'application/json' } });
-    }
     const [error, weatherData] = await to(fetchWeather(position))
     if (error) {
       return new Response(JSON.stringify({ error: { message: error.message } }), { status: 500, headers: { 'Content-Type': 'application/json' } })
     }
-    const success = weatherData.code == 200 ? 1 : 0
-    await env.DB.prepare("INSERT INTO position_weather (longitude, latitude, weather, updated_at, success) VALUES (?, ?, ?, ?, ?)")
-      .bind(longitude, latitude, JSON.stringify(weatherData), Date.now(), success)
-      .run()
-    return new Response(JSON.stringify(weatherData), { headers: { 'Content-Type': 'application/json' } });
+    return new Response(weatherData, { headers: { 'Content-Type': 'application/json' } });
   },
 } satisfies ExportedHandler<Env>;
