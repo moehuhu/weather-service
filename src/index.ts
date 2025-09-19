@@ -18,7 +18,7 @@ export default {
       const authentication = await new SignJWT(customPayload)
         .setProtectedHeader(customHeader)
         .sign(privateKey)
-      const weatherURL = `https://p53dmxww9d.re.qweatherapi.com/v7/weather/7d?location=${position}`
+      const weatherURL = `https://${env.API_HOST}/v7/weather/7d?location=${position}`
       const weatherResponse = await fetch(weatherURL, {
         headers: {
           'Authorization': `Bearer ${authentication}`
