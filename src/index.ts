@@ -36,7 +36,7 @@ export default {
     requestParams?.split('&').map(item => item.split('=')).forEach(item => params[item[0]] = item[1])
     const { longitude, latitude } = params
     if (!longitude || !latitude) {
-      return new Response('Invalid request', { status: 400 })
+      return new Response(JSON.stringify({ error: { message: 'Invalid request' } }), { status: 400, headers: { 'Content-Type': 'application/json' } })
     }
     const position = `${longitude},${latitude}`
     const stmt = env.DB.prepare("SELECT * FROM position_weather WHERE longitude = ? AND latitude = ?")
@@ -47,24 +47,24 @@ export default {
       if (Date.now() - oldDate > 2 * 60 * 60 * 1000 || !results[0].success) {
         const [error, weatherData] = await to(fetchWeather(position))
         if (error) {
-          return new Response(error.message, { status: 500 })
+          return new Response(JSON.stringify({ error: { message: error.message } }), { status: 500, headers: { 'Content-Type': 'application/json' } })
         }
         const success = weatherData.code == 200 ? 1 : 0
         await env.DB.prepare("UPDATE position_weather SET weather = ?, updated_at = ?, success = ? WHERE longitude = ? AND latitude = ?")
           .bind(JSON.stringify(weatherData), Date.now(), success, longitude, latitude)
           .run()
-        return new Response(JSON.stringify(weatherData));
+        return new Response(JSON.stringify(weatherData), { headers: { 'Content-Type': 'application/json' } });
       }
-      return new Response(oldWeather);
+      return new Response(oldWeather as string, { headers: { 'Content-Type': 'application/json' } });
     }
     const [error, weatherData] = await to(fetchWeather(position))
     if (error) {
-      return new Response(error.message, { status: 500 })
+      return new Response(JSON.stringify({ error: { message: error.message } }), { status: 500, headers: { 'Content-Type': 'application/json' } })
     }
     const success = weatherData.code == 200 ? 1 : 0
     await env.DB.prepare("INSERT INTO position_weather (longitude, latitude, weather, updated_at, success) VALUES (?, ?, ?, ?, ?)")
       .bind(longitude, latitude, JSON.stringify(weatherData), Date.now(), success)
       .run()
-    return new Response(JSON.stringify(weatherData));
+    return new Response(JSON.stringify(weatherData), { headers: { 'Content-Type': 'application/json' } });
   },
 } satisfies ExportedHandler<Env>;
