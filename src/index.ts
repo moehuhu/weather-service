@@ -27,12 +27,18 @@ export default {
       const weatherData = await weatherResponse.text()
       return weatherData
     }
-    const { longitude, latitude } = await request.json()
+    const requestParams = request.url.split('?')?.[1]
+    const params: Record<string, string> = {}
+    requestParams?.split('&').map(item => item.split('=')).forEach(item => params[item[0]] = item[1])
+    const { longitude, latitude } = params
+    if (!longitude || !latitude) {
+      return new Response('Invalid request', { status: 400 })
+    }
     const stmt = env.DB.prepare("SELECT * FROM position_weather WHERE longitude = ? AND latitude = ?")
     const { results } = await stmt.bind(longitude, latitude).all()
     if (results.length > 0) {
       const oldWeather = results[0].weather
-      const oldDate = results[0].updated_at
+      const oldDate = results[0].updated_at as number
       if (Date.now() - oldDate > 2 * 60 * 60 * 1000) {
         const weatherData = await fetchWeather(position)
         const success = !weatherData.error
