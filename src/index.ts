@@ -42,7 +42,7 @@ export default {
       const oldDate = results[0].updated_at as number
       if (Date.now() - oldDate > 2 * 60 * 60 * 1000 || !results[0].success) {
         const weatherData = await fetchWeather(position)
-        const success = weatherData.code == 200
+        const success = weatherData.code == 200 ? 1 : 0
         await env.DB.prepare("UPDATE position_weather SET weather = ?, updated_at = ?, success = ? WHERE longitude = ? AND latitude = ?")
           .bind(weatherData, Date.now(), success, longitude, latitude)
           .run()
@@ -51,7 +51,7 @@ export default {
       return new Response(oldWeather);
     }
     const weatherData = await fetchWeather(position)
-    const success = weatherData.code == 200
+    const success = weatherData.code == 200 ? 1 : 0
     await env.DB.prepare("INSERT INTO position_weather (longitude, latitude, weather, updated_at, success) VALUES (?, ?, ?, ?, ?)")
       .bind(longitude, latitude, weatherData, Date.now(), success)
       .run()
