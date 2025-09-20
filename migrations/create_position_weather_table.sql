@@ -4,5 +4,5 @@ CREATE TABLE IF NOT EXISTS position_weather (
     longitude REAL NOT NULL,
     latitude REAL NOT NULL,
     weather TEXT NOT NULL,
-    updated_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
 );
