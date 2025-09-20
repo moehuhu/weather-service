@@ -9,6 +9,7 @@ export interface Env {
   PROJECT_ID: string;
   API_HOST: string;
   DB: D1Database;
+  INTERVAL_MINUTES: string;
 }
 export default {
   async scheduled(controller, env, ctx) {
@@ -78,7 +79,7 @@ export default {
 
     const weatherRecord = await getOldWeatherRecord(Number(longitude), Number(latitude))
     if (weatherRecord) {
-      const isExpired = weatherRecord.updated_at + 30 * 60 * 1000 < Date.now() || new Date(weatherRecord.updated_at).getDate() !== new Date().getDate()
+      const isExpired = weatherRecord.updated_at + Number(env.INTERVAL) * 60 * 1000 < Date.now() || new Date(weatherRecord.updated_at).getDate() !== new Date().getDate()
       if (isExpired) {
         const [error, newWeatherData] = await to(fetchWeather(position))
         if (error) {
