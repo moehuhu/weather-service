@@ -6,5 +6,4 @@ export const weatherTable = sqliteTable("position_weather", {
   latitude: real().notNull(),
   weather: text().notNull(),
   updated_at: int().notNull(),
-  success: int().notNull(),
 });

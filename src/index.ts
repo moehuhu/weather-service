@@ -67,7 +67,6 @@ export default {
       latitude: Number(latitude),
       weather: weatherData,
       updated_at: Date.now(),
-      success: weatherData.code == 200 ? 1 : 0
     })
     return new Response(weatherData, { headers: { 'Content-Type': 'application/json' } });
   },
