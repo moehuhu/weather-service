@@ -3,6 +3,9 @@
   "main": "src/index.ts",
   "name": "weather-service",
   "upload_source_maps": true,
+  "vars": {
+    "INTERVAL_MINUTES": "30"
+  },
   "d1_databases": [
     {
       "binding": "DB",
