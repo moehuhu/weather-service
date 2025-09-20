@@ -20,6 +20,8 @@
     "publish": true
   },
   "devDependencies": {
+    "drizzle-kit": "^0.31.4",
+    "tsx": "^4.20.5",
     "typescript": "5.8.3",
     "wrangler": "4.21.x"
   },
@@ -33,6 +35,8 @@
   },
   "dependencies": {
     "await-to-js": "^3.0.0",
+    "dotenv": "^17.2.2",
+    "drizzle-orm": "^0.44.5",
     "jose": "^6.1.0"
   }
 }

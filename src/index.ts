@@ -1,5 +1,14 @@
 import { SignJWT, importPKCS8 } from "jose";
 import { to } from "await-to-js";
+import { drizzle } from 'drizzle-orm/d1';
+import { weatherTable } from "./db/schema";
+export interface Env {
+  PRIVATE_KEY: string;
+  KEY_ID: string;
+  PROJECT_ID: string;
+  API_HOST: string;
+  DB: D1Database;
+}
 export default {
   async scheduled(controller, env, ctx) { },
   async fetch(request, env) {
@@ -28,7 +37,9 @@ export default {
       const weatherData = await weatherResponse.text()
       return weatherData
     }
-
+    const db = drizzle(env.DB)
+    const weather = await db.select().from(weatherTable).all()
+    return new Response(JSON.stringify(weather), { headers: { 'Content-Type': 'application/json' } })
     const requestParams = request.url.split('?')?.[1]
     const params: Record<string, string> = {}
     requestParams?.split('&').map(item => item.split('=')).forEach(item => params[item[0]] = item[1])
