@@ -1,6 +1,7 @@
 import { SignJWT, importPKCS8 } from "jose";
 import { to } from "await-to-js";
 import { drizzle } from 'drizzle-orm/d1';
+import { eq, and } from "drizzle-orm";
 import { weatherTable } from "./db/schema";
 export interface Env {
   PRIVATE_KEY: string;
@@ -37,9 +38,7 @@ export default {
       const weatherData = await weatherResponse.text()
       return weatherData
     }
-    const db = drizzle(env.DB)
-    const weather = await db.select().from(weatherTable).all()
-    return new Response(JSON.stringify(weather), { headers: { 'Content-Type': 'application/json' } })
+
     const requestParams = request.url.split('?')?.[1]
     const params: Record<string, string> = {}
     requestParams?.split('&').map(item => item.split('=')).forEach(item => params[item[0]] = item[1])
@@ -47,11 +46,29 @@ export default {
     if (longitude === undefined || latitude === undefined) {
       return new Response(JSON.stringify({ error: { message: 'Invalid request' } }), { status: 400, headers: { 'Content-Type': 'application/json' } })
     }
+
+    const db = drizzle(env.DB)
+    const weather = await db
+      .select()
+      .from(weatherTable)
+      .where(and(eq(weatherTable.longitude, Number(longitude)), eq(weatherTable.latitude, Number(latitude))))
+      .limit(1)
+    if (weather.length > 0) {
+      return new Response(weather[0].weather, { headers: { 'Content-Type': 'application/json' } })
+    }
+
     const position = `${longitude},${latitude}`
     const [error, weatherData] = await to(fetchWeather(position))
     if (error) {
       return new Response(JSON.stringify({ error: { message: error.message } }), { status: 500, headers: { 'Content-Type': 'application/json' } })
     }
+    await db.insert(weatherTable).values({
+      longitude: Number(longitude),
+      latitude: Number(latitude),
+      weather: weatherData,
+      updated_at: Date.now(),
+      success: weatherData.code == 200 ? 1 : 0
+    })
     return new Response(weatherData, { headers: { 'Content-Type': 'application/json' } });
   },
 } satisfies ExportedHandler<Env>;
