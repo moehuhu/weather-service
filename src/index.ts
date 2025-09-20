@@ -78,7 +78,7 @@ export default {
 
     const weatherRecord = await getOldWeatherRecord(Number(longitude), Number(latitude))
     if (weatherRecord) {
-      const isExpired = weatherRecord.updated_at + 4 * 60 * 60 * 1000 < Date.now()
+      const isExpired = weatherRecord.updated_at + 4 * 60 * 60 * 1000 < Date.now() || new Date(weatherRecord.updated_at).getDate() !== new Date().getDate()
       if (isExpired) {
         const [error, newWeatherData] = await to(fetchWeather(position))
         if (error) {
