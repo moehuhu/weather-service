@@ -1,7 +1,7 @@
 import { SignJWT, importPKCS8 } from "jose";
 import { to } from "await-to-js";
 import { drizzle } from 'drizzle-orm/d1';
-import { eq, and } from "drizzle-orm";
+import { eq, and, not } from "drizzle-orm";
 import { weatherTable } from "./db/schema";
 export interface Env {
   PRIVATE_KEY: string;
@@ -11,7 +11,11 @@ export interface Env {
   DB: D1Database;
 }
 export default {
-  async scheduled(controller, env, ctx) { },
+  async scheduled(controller, env, ctx) {
+    const db = drizzle(env.DB)
+    //删除表中所有数据以切换到新一天
+    await db.delete(weatherTable).where(not(eq(weatherTable.updated_at, Date.now())))
+  },
   async fetch(request, env) {
     const fetchWeather = async (position: string) => {
       const privateKey = await importPKCS8(env.PRIVATE_KEY, 'EdDSA')
